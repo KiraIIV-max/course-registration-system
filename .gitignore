@@ -1,0 +1,56 @@
+
+# Operating System
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# Java and Maven
+**/target/
+*.class
+*.log
+*.jar
+*.war
+
+# Gradle (if used)
+.gradle/
+**/build/
+
+# Node.js and React
+**/node_modules/
+**/dist/
+**/coverage/
+*.tsbuildinfo
+
+# Environment Variables and Secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Local Spring Boot Configuration
+**/application-local.yml
+**/application-local.yaml
+**/application-local.properties
+
+# Credentials and Keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+
+# Temporary Files
+*.tmp
+*.bak
+*.cache
+
+# Test and Tool Reports
+**/test-results/
+**/.nyc_output/
