@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: auth-route
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/auth/**
+
+            - id: students-route
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/students/**
+
+            - id: course-route
+              uri: lb://course-service
+              predicates:
+                - Path=/api/courses/**
+
+            - id: enrollment-route
+              uri: lb://enrollment-service
+              predicates:
+                - Path=/api/enrollments/**
+
+            - id: grade-route
+              uri: lb://grade-service
+              predicates:
+                - Path=/api/grades/**
+
+server:
+  port: 8090
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
