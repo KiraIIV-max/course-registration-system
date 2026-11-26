@@ -2,124 +2,122 @@
 
 A microservices-based university course registration platform built using Spring Boot, Spring Cloud, PostgreSQL, and React.
 
+**Course:** Software Engineering II
+
+**Architecture:** Microservices Architecture
+
+**Project Status:** Active Development
+
+**Active Branch:** development
+
 ## 1. Project Overview
 
 The University Course Registration System is a web-based application designed to manage university courses, student enrollment, authentication, and academic grades.
 
-The project follows a **Microservices Architecture**, where independent services handle different business responsibilities and communicate through REST APIs.
+The system follows a Microservices Architecture, where independent services handle different business responsibilities and communicate through REST APIs.
 
-The system is being developed as part of the Software Engineering II course.
+The project demonstrates software engineering principles, distributed systems, secure authentication, business-rule enforcement, database management, and containerized deployment.
 
-**Project Status:** Active Development
-**Current Milestone:** Backend Infrastructure
-**Completed Service:** Eureka Discovery Server
-**Next Service:** API Gateway
-
-> **Implementation note:** The features described below are the planned scope unless explicitly marked as completed. At this checkpoint, only the Eureka Discovery Server has been implemented and verified.
+For current implementation progress and individual contributions, see [Team Progress Tracker](docs/PROGRESS.md).
 
 ## 2. Project Objectives
 
 - Build a modular and maintainable university registration platform.
 - Apply Microservices Architecture and separation of concerns.
 - Implement secure authentication and role-based authorization.
-- Allow administrators to manage courses and academic information.
-- Allow students to browse available courses and register for them.
-- Enforce registration rules and data validation.
+- Manage university courses and academic information.
+- Allow students to register for available courses.
+- Enforce business rules and data validation.
 - Implement service discovery and API routing.
+- Implement client-side load balancing.
 - Apply Aspect-Oriented Programming (AOP).
+- Apply Object Constraint Language (OCL).
 - Document and test REST APIs.
 - Containerize the application using Docker.
+- Support collaborative development using Git and GitHub.
 
 ## 3. Main Features
 
-### Authentication and Authorization (Planned)
+### Authentication and Authorization
 
-- User authentication using JWT.
-- Password hashing using BCrypt.
+- Student registration.
+- User login.
+- JWT-based authentication.
+- BCrypt password hashing.
 - Role-based access control.
-- Student and Administrator roles.
+- Student profile management.
 - Protected API endpoints.
 
-### Course Management (Planned)
+### Course Management
 
 - Create courses.
 - Update course information.
-- Delete courses, subject to business constraints.
+- Delete courses according to business rules.
 - View available courses.
-- Search and filter courses.
 - Manage course capacity.
+- Check course availability.
+- Search and filter courses, subject to approved requirements.
 
-### Student Enrollment (Planned)
+### Student Enrollment
 
 - Register students in available courses.
 - Prevent duplicate enrollment.
 - Validate available course capacity.
+- Validate enrollment eligibility.
 - View student enrollments.
-- Drop courses according to enrollment rules.
+- Withdraw from courses according to business rules.
 
-### Grade Management (Planned)
+### Grade Management
 
-- Assign and update student grades.
-- Retrieve grades for enrolled students.
-- Restrict grade management operations to authorized users.
-- Validate grade values.
+- Assign student grades.
+- Update grades.
+- Retrieve student grades.
+- Validate grade ranges.
+- Verify enrollment before assigning grades.
+- Calculate GPA, subject to approved requirements.
 
-These features describe the planned scope and may be refined during requirements analysis.
+### Frontend
+
+- Login and registration pages.
+- Student Dashboard.
+- Administrator Dashboard.
+- Course management.
+- Student enrollment management.
+- Grade management.
+- Responsive user interface.
+- Role-based navigation.
+
+These features represent the planned project scope. Implementation status is maintained separately in the Team Progress Tracker.
 
 ## 4. System Architecture
 
-The system uses a microservices-based architecture. The intended request flow is:
-
-```text
-                    React + Vite
-                         |
-                         v
-                    API Gateway
-                         |
-           +-------------+-------------+
-           |             |             |
-           v             v             v
-      Auth Service  Course Service  Enrollment Service
-                                       |
-                                       v
-                                  Grade Service
-
-                Eureka Discovery Server
-                  (Service Registry)
-
-             PostgreSQL Data Storage
-```
-
-This diagram is conceptual, not a finalized UML or deployment diagram. Service-to-service dependencies and data ownership will be defined during implementation.
+The application consists of four business microservices, a Discovery Server, an API Gateway, a React frontend, and PostgreSQL data storage.
 
 ### Architecture Components
 
-| Component | Responsibility | Status |
-|---|---|---|
-| React Frontend | User interface | Planned |
-| API Gateway | Routing client requests to backend services | Next |
-| Eureka Server | Service registration and discovery | Completed locally |
-| Auth Service | Authentication and user authorization | Planned |
-| Course Service | Course information and management | Planned |
-| Enrollment Service | Student course registration | Planned |
-| Grade Service | Academic grade management | Planned |
-| PostgreSQL | Persistent relational data storage | Planned integration |
+| Component | Responsibility |
+|---|---|
+| React Frontend | User interface |
+| API Gateway | Client entry point and request routing |
+| Eureka Discovery Server | Service registration and discovery |
+| Auth Service | Authentication and student management |
+| Course Service | Course management and availability |
+| Enrollment Service | Student course registration |
+| Grade Service | Academic grade management |
+| PostgreSQL | Persistent relational data storage |
 
 ### Communication
 
-- Frontend-to-backend communication through REST APIs.
-- API Gateway as the primary client entry point.
-- Eureka for service discovery.
-- OpenFeign for selected synchronous inter-service requests.
-- Spring Cloud LoadBalancer for service instance selection.
+- Frontend requests are sent through the API Gateway.
+- API Gateway routes requests to the appropriate microservice.
+- Business microservices register with Eureka.
+- Spring Cloud LoadBalancer selects available service instances.
+- OpenFeign handles selected synchronous inter-service communication.
+- Each business microservice owns its data.
 
-### Database Strategy
+The finalized architecture diagram will be maintained in the architecture documentation.
 
-Each business microservice should own its data and database schema.
-
-Services must not directly modify another service's database.
-
-Cross-service operations should use explicitly defined APIs.
+See [Architecture Documentation](docs/architecture/ARCHITECTURE.md).
 
 ## 5. Technology Stack
 
@@ -129,35 +127,34 @@ Cross-service operations should use explicitly defined APIs.
 |---|---|
 | Java 25 LTS | Backend programming language |
 | Spring Boot | Backend application framework |
-| Spring Cloud Gateway | API Gateway |
+| Spring Cloud Gateway WebFlux | API Gateway |
 | Netflix Eureka | Service discovery |
-| Spring Cloud OpenFeign | Inter-service HTTP communication |
+| Spring Cloud OpenFeign | Inter-service communication |
 | Spring Cloud LoadBalancer | Client-side load balancing |
 | Spring Security | Authentication and authorization |
 | JWT | Token-based authentication |
+| BCrypt | Password hashing |
 | Spring Data JPA | Database access |
-| Hibernate | ORM implementation |
+| Hibernate | Object-relational mapping |
 | PostgreSQL | Relational database |
-| Flyway | Database schema migrations |
+| Flyway | Database migrations, subject to team approval |
 | Jakarta Bean Validation | Input validation |
 | Spring AOP | Cross-cutting concerns |
 | Maven | Build and dependency management |
-| JUnit and Mockito | Unit testing |
-| springdoc OpenAPI | API documentation and Swagger UI |
-
-Not every listed dependency is installed yet. Each service should add only the dependencies it needs.
+| JUnit | Unit testing |
+| Mockito | Dependency mocking |
+| springdoc OpenAPI | API documentation |
 
 ### Frontend
 
 | Technology | Purpose |
 |---|---|
-| React | UI development |
-| Vite | Frontend tooling |
+| React | User interface development |
+| Vite | Frontend build tooling |
 | JavaScript | Frontend programming |
-| HTML and CSS | UI structure and styling |
-| Axios or Fetch API | HTTP requests |
-
-The HTTP client will be selected during frontend setup.
+| HTML | Page structure |
+| CSS | Styling and responsive design |
+| Axios or Fetch API | HTTP communication |
 
 ### Development Tools
 
@@ -165,185 +162,268 @@ The HTTP client will be selected during frontend setup.
 |---|---|
 | VS Code | Development environment |
 | Git | Version control |
-| GitHub | Collaboration and code hosting |
+| GitHub | Team collaboration |
 | Postman | API testing |
+| Swagger UI | Interactive API documentation |
 | DBeaver | Database management |
 | Docker | Containerization |
 | Docker Compose | Multi-container orchestration |
-| draw.io | Architecture and UML diagrams |
+| draw.io | UML and architecture diagrams |
 
-### Version Management
+### Technology Versions
 
-The team should use the agreed versions consistently to avoid environment-specific build failures.
-
-| Tool | Agreed / Recorded Version |
+| Technology | Recorded Team Version |
 |---|---|
 | Java JDK | 25.0.1 |
 | Maven | 3.10.1 |
+| Maven Wrapper (infrastructure services) | 3.3.4 |
+| Docker Java JDK / JRE | Eclipse Temurin 25.0.5.1+2 |
 | Spring Boot | 4.1.3 |
 | Spring Cloud | 2025.1.5 |
 | PostgreSQL | 18.7 |
-| Docker Engine | 29.8.0 |
-| Docker Compose | 5.5.1 |
 | Node.js | 22.16.0 |
 | npm | 10.9.2 |
+| Docker Engine | 29.8.0 |
+| Docker Compose | 5.5.1 |
 | Git | 2.49.0 |
 
-The Spring Boot and Spring Cloud versions above are configured in the completed Discovery Server. Future services should use the team's agreed compatible versions and verify their builds.
+All team members should use the agreed technology baseline. Docker Engine 29.9.3 and Docker Compose 5.7.0 (Docker Desktop 4.99.0) were tested locally on 26 November 2026; adoption as the shared baseline is pending team approval. The recorded team versions above remain unchanged until agreed.
 
-Dependency versions should be managed through Spring Boot dependency management and the Spring Cloud BOM, rather than manually assigning versions to every dependency.
+Spring Boot and Spring Cloud dependencies should be managed through Spring Boot dependency management and the Spring Cloud BOM.
 
-**Windows Java note:** A machine may have multiple JDKs installed. Maven must run with JDK 25 when the project targets Java 25. Check with `java -version`, `javac -version`, and `mvn -version`.
+Each service should include only the dependencies required for its responsibilities.
 
 ## 6. Repository Structure
 
-```text
-course-registration-system/
-|-- backend/
-|   |-- discovery-server/       # Implemented
-|   |-- api-gateway/            # Next to initialize
-|   |-- auth-service/           # Planned
-|   |-- course-service/         # Planned
-|   |-- enrollment-service/     # Planned
-|   `-- grade-service/          # Planned
-|-- frontend/                   # Planned React application
-|-- docker/                     # Planned container configuration
-|-- docs/
-|   |-- requirements/
-|   |-- architecture/
-|   |-- uml/
-|   |-- database/
-|   `-- api/
-|-- .github/
-|   `-- workflows/
-|-- .gitignore
-`-- README.md
-```
+    course-registration-system/
+    |-- backend/
+    |   |-- discovery-server/
+    |   |   |-- Dockerfile
+    |   |   `-- .dockerignore
+    |   |-- api-gateway/
+    |   |   |-- Dockerfile
+    |   |   `-- .dockerignore
+    |   |-- auth-service/
+    |   |-- course-service/
+    |   |-- enrollment-service/
+    |   `-- grade-service/
+    |-- frontend/
+    |-- docker/
+    |-- docs/
+    |   |-- requirements/
+    |   |   `-- SRS.md
+    |   |-- architecture/
+    |   |   `-- ARCHITECTURE.md
+    |   |-- uml/
+    |   |-- database/
+    |   |-- api/
+    |   |-- API_STANDARDS.md
+    |   |-- DEVELOPMENT_GUIDE.md
+    |   `-- PROGRESS.md
+    |-- .github/
+    |   `-- workflows/
+    |-- compose.yaml
+    |-- .editorconfig
+    |-- .gitignore
+    `-- README.md
 
-Some directories are placeholders and do not yet contain working applications. See the project progress documentation as it is added.
+Some directories may contain placeholders until their assigned services or documentation are implemented.
 
-## 7. User Roles and Permissions
+## 7. Service Names and Ports
 
-### Student
+| Service | Application Name | Port |
+|---|---|---:|
+| Discovery Server | discovery-server | 8761 |
+| API Gateway | api-gateway | 8090 |
+| Auth Service | auth-service | 8081 |
+| Course Service | course-service | 8082 |
+| Enrollment Service | enrollment-service | 8083 |
+| Grade Service | grade-service | 8084 |
+| PostgreSQL | postgresql | 5432 |
+| React Frontend | frontend | 5173 |
 
-- Log in to the system.
+Business service ports are the proposed development assignments and must be coordinated before changes are made.
+
+## 8. API Gateway and Routing
+
+The API Gateway is the primary entry point for external clients.
+
+**Base URL:** http://localhost:8090
+
+### Configured Routes
+
+| API Path | Destination |
+|---|---|
+| `/api/auth/**` | `lb://auth-service` |
+| `/api/students/**` | `lb://auth-service` |
+| `/api/courses/**` | `lb://course-service` |
+| `/api/enrollments/**` | `lb://enrollment-service` |
+| `/api/grades/**` | `lb://grade-service` |
+
+The Gateway uses Eureka service discovery and Spring Cloud LoadBalancer.
+
+External clients should communicate with business microservices through the Gateway.
+
+Successful request forwarding and load distribution must be verified once the destination services are available.
+
+## 9. User Roles and Permissions
+
+### STUDENT
+
+- Register and log in.
+- Manage permitted personal profile information.
 - View available courses.
-- Search courses.
-- Enroll in eligible courses.
-- Drop courses according to defined rules.
+- Register for eligible courses.
+- Withdraw from courses according to business rules.
 - View personal enrollments and grades.
 
-### Administrator
+### ADMIN
 
 - Manage course information.
 - Manage course capacity.
-- View enrollment information.
-- Perform authorized academic administration operations.
+- Manage authorized student information.
+- Manage enrollments.
+- Assign and update grades.
 
-Grade assignment permissions and any additional roles will be finalized in the requirements specification.
+Final permissions must match the approved Software Requirements Specification.
 
-## 8. Business Rules
+## 10. Business Rules and OCL
 
-The following are initial business rules to be validated during requirements analysis.
+### Business Rules
 
 1. A student cannot enroll in the same course more than once.
 2. A course cannot exceed its maximum enrollment capacity.
 3. Enrollment requires an authenticated student.
-4. A student can view only their own private academic information unless explicitly authorized otherwise.
-5. Grades must satisfy the configured grading scale.
-6. Enrollment and grade operations must reference valid academic records.
+4. Students cannot access another student's private academic information without authorization.
+5. Grades must satisfy the approved grading scale.
+6. Grade assignment requires a valid enrollment.
+7. Enrollment and grade operations must reference valid academic records.
 
-Additional rules, including enrollment deadlines, prerequisites, course deletion restrictions, and maximum course loads, will be specified before implementation.
+Additional business rules will be finalized during requirements analysis.
 
-## 9. OCL Constraints
+### Object Constraint Language
 
-The project will document at least five Object Constraint Language (OCL) constraints.
+The project must include at least five OCL constraints covering invariants, preconditions, and postconditions.
 
-The constraints will cover relevant invariants, preconditions, and postconditions.
+Potential constraint areas include:
 
-Potential areas include:
-
-- Course capacity.
+- Positive course capacity.
+- Maximum enrollment capacity.
 - Duplicate enrollment prevention.
 - Valid grade ranges.
 - Enrollment eligibility.
 - Successful registration state.
 
-Formal OCL expressions will be written and checked against the final UML class model.
+Approved OCL constraints must be documented in the UML model and enforced in the implementation.
 
-## 10. Aspect-Oriented Programming
+## 11. Security and API Standards
 
-The backend will include at least two AOP aspects.
+The proposed security architecture includes:
+
+- Spring Security.
+- JWT authentication.
+- BCrypt password hashing.
+- Role-based authorization.
+- Protected API endpoints.
+- Resource ownership validation.
+- Secure environment variables.
+- Request DTO validation.
+- Consistent exception handling.
+
+Passwords, JWT signing secrets, and database credentials must never be committed to GitHub.
+
+Business microservices should follow a layered architecture:
+
+Controller → Service → Repository → Database
+
+Entities must not be exposed directly through public APIs.
+
+All members should review and follow the shared API standards after team approval.
+
+See [API and Security Standards](docs/API_STANDARDS.md).
+
+## 12. Aspect-Oriented Programming
+
+The project must implement at least two AOP aspects.
 
 ### Logging Aspect
 
-Responsible for recording relevant application events and method execution information.
+Records relevant method execution and application events using an appropriate advice type, such as @Before.
 
 ### Execution Time Aspect
 
-Responsible for measuring execution duration for selected service operations.
+Measures method execution duration using @Around.
 
-Logging must avoid exposing passwords, JWT tokens, or other sensitive information.
+Pointcuts, advice types, and execution results must be documented.
 
-## 11. API Documentation
+Sensitive information must not appear in application logs.
 
-Each applicable business microservice will expose API documentation using OpenAPI and Swagger UI.
+## 13. Database Architecture
 
-Postman collections will be maintained for integration and API testing.
+PostgreSQL is the primary relational database.
 
-API documentation should include:
+Each business microservice should own its database or schema.
+
+Database access is implemented using Spring Data JPA and Hibernate.
+
+### Database Guidelines
+
+- Define primary keys and appropriate constraints.
+- Use consistent naming conventions.
+- Use transactions where required.
+- Prevent invalid and duplicate records.
+- Avoid direct access to another service's database.
+- Communicate through service APIs for cross-service operations.
+- Store database credentials securely.
+- Maintain database migration history when migrations are adopted.
+
+The final database design and ERD will be maintained under docs/database/.
+
+## 14. API Documentation and Testing
+
+### API Documentation
+
+Each business microservice must provide Swagger/OpenAPI documentation covering:
 
 - Endpoint paths.
 - HTTP methods.
-- Request and response formats.
+- Request and response DTOs.
 - Authentication requirements.
-- Expected status codes.
-- Error responses.
+- Request and response examples.
+- HTTP status codes.
+- Validation and error responses.
 
-Actual endpoint definitions will be added as APIs are implemented.
+### Testing Strategy
 
-## 12. Testing Strategy
+**Unit Testing**
 
-### Unit Testing
+- JUnit.
+- Mockito.
+- Business logic tests.
+- Validation tests.
 
-- JUnit for test execution.
-- Mockito for mocking dependencies.
-- Business logic and validation tests.
-
-### Integration Testing
+**Integration Testing**
 
 - Database integration.
 - API endpoint behavior.
 - Service communication.
-- Authentication and authorization flows.
+- Authentication and authorization.
+- Gateway routing.
+- Service discovery.
+- Load balancing.
 
-### Manual API Testing
+**Manual Testing**
 
 - Postman collections.
 - Positive and negative test cases.
-- Validation and error handling.
+- Business-rule validation.
+- Frontend integration.
 
-### Current Verified Test Status
+All external API tests should use the API Gateway.
 
-The Discovery Server completed `mvn clean verify` successfully on JDK 25, and its Eureka Dashboard was opened successfully in a browser. This does **not** mean the other planned services or end-to-end flows have been tested.
+Verified test results are recorded in [PROGRESS.md](docs/PROGRESS.md).
 
-## 13. Docker and Deployment
-
-Docker will be used to package backend services and required infrastructure.
-
-Docker Compose will coordinate the local development environment.
-
-The planned containerized environment includes:
-
-- Eureka Server.
-- API Gateway.
-- Business microservices.
-- PostgreSQL database instances or isolated databases.
-- Frontend, if included in the deployment configuration.
-
-Actual Dockerfiles, Compose configuration, ports, and environment variables will be added during implementation. Docker deployment is not yet verified.
-
-## 14. Local Development Setup
+## 15. Local Development Setup
 
 ### Prerequisites
 
@@ -351,203 +431,342 @@ Install and configure:
 
 - Java JDK 25.
 - Apache Maven.
-- PostgreSQL (for future database-backed services).
-- Node.js and npm (for the future frontend).
-- Docker Desktop (for future containerized development).
+- PostgreSQL.
+- Node.js and npm.
+- Docker Desktop.
 - Git.
-- VS Code with Java and Spring Boot extensions (recommended).
+- VS Code with Java and Spring Boot extensions.
 
 ### Clone the Repository
 
-```bash
-git clone https://github.com/KiraIIV-max/course-registration-system.git
-cd course-registration-system
-git switch development
-git pull --ff-only origin development
-```
+    git clone -b development https://github.com/KiraIIV-max/course-registration-system.git
+    cd course-registration-system
 
-### Check Java and Maven
+### Verify the Environment
 
-On Windows CMD:
+    java -version
+    javac -version
+    mvn -version
+    node -v
+    npm -v
+    git --version
+    docker --version
+    docker compose version
+    psql --version
+
+Maven must use JDK 25 for the current backend configuration.
+
+### Windows Java and Maven Configuration
+
+If the wrong Java or Maven version is selected, configure the current Windows CMD session:
+
+    set "JAVA_HOME=C:\Program Files\Java\jdk-25"
+    set "MAVEN_HOME=C:\apache-maven-3.10.1"
+    set "PATH=%JAVA_HOME%\bin;%MAVEN_HOME%\bin;%PATH%"
+
+Verify the configuration:
+
+    java -version
+    javac -version
+    mvn -version
+
+Adjust installation paths according to your computer.
+These commands affect only the current CMD session.
+
+## 16. Running the Backend Infrastructure Locally (Without Docker)
+
+This is an alternative to Docker Compose (Section 17). Do not run both modes simultaneously on the same ports.
+
+### Step 1 — Start Eureka Discovery Server
+
+Open a terminal from the repository root:
+
+    cd backend\discovery-server
+    mvn clean verify
+    mvn spring-boot:run
+
+Open the Eureka Dashboard:
+
+http://localhost:8761
+
+Keep the Discovery Server running.
+
+### Step 2 — Start API Gateway
+
+Open a second terminal from the repository root:
+
+    cd backend\api-gateway
+    mvn clean verify
+    mvn spring-boot:run
+
+Ensure the correct Java and Maven versions are configured in this terminal.
+
+### Step 3 — Verify API Gateway
+
+Open:
+
+http://localhost:8090/actuator/health
+
+Expected HTTP status: 200 OK.
+
+Expected health status: UP.
+
+### Step 4 — Verify Eureka Registration
+
+Open:
+
+http://localhost:8761
+
+The Eureka Dashboard should display API-GATEWAY with status UP after registration completes.
+
+### Step 5 — Test Initial Gateway Routing
+
+Open a third terminal:
+
+    curl -i http://localhost:8090/api/auth/test
+    curl -i http://localhost:8090/api/students
+    curl -i http://localhost:8090/api/courses
+    curl -i http://localhost:8090/api/enrollments
+    curl -i http://localhost:8090/api/grades
+
+HTTP 503 Service Unavailable is expected when no destination business-service instances are registered.
+
+These initial checks do not establish successful business-service routing or load balancing.
+
+### Step 6 — Stop the Services
+
+Press Ctrl + C in each running terminal.
+
+### Troubleshooting
+
+If port 8090 is already in use:
+
+    netstat -ano | findstr :8090
+
+Check whether an existing Gateway instance is running:
+
+    curl -i http://localhost:8090/actuator/health
+
+Do not start duplicate instances on the same port.
+
+If Eureka is unavailable, verify that the Discovery Server is running on port 8761.
+
+## 17. Docker and Deployment
+
+### Current Infrastructure Milestone
+
+The Discovery Server and API Gateway have been containerized and successfully tested together using the root `compose.yaml`. The current Compose environment contains only these two services.
+
+| Service | Image | Host port |
+|---|---|---:|
+| Discovery Server | `course-registration/discovery-server:0.0.3` | 8761 |
+| API Gateway | `course-registration/api-gateway:0.0.3` | 8090 |
+
+### Multi-Stage Docker Builds
+
+Both services have a Dockerfile and a `.dockerignore`. The builder uses Java 25 JDK and Maven Wrapper 3.3.4 with Maven 3.10.1 to package source code. The runtime stage copies the packaged JAR into a Java 25 JRE image. No prebuilt local `target/` directory is required. Both runtime stages install curl using APT with `--no-install-recommends` and remove package lists. The curl package version is not pinned. Tests are skipped during Docker packaging; run `mvnw.cmd clean verify` from each service directory separately before integration.
+
+The base images are pinned by digest:
+
+- JDK: `eclipse-temurin:25-jdk@sha256:ce2ef9d2d67a68de5e196d4de9d743327c44a10b57fe02ec39f572c652cacfd3`
+- JRE: `eclipse-temurin:25-jre@sha256:4ed132f6832e9804b123e89a849a7b4502756ae64a4ee08ebab939d9d5d0a9fa`
+
+The Docker runtime uses Temurin 25.0.5.1+2, while the recorded local JDK baseline is 25.0.1. Both use Java 25. Review pinned images periodically for security updates.
+
+### Start with Docker Compose
+
+Start Docker Desktop in Linux container mode. From the repository root, ensure ports 8761 and 8090 are free and run:
 
 ```cmd
-java -version
-javac -version
-mvn -version
+docker compose config
+docker compose up --build -d --wait
+docker compose ps
 ```
 
-All Java-related commands should report JDK 25 for the current backend configuration. If Maven uses an older JDK, set `JAVA_HOME` and prepend its `bin` directory to `PATH` in the current CMD session:
+The Compose build uses the service source directories and creates a shared bridge network. The Gateway connects to Eureka using `http://discovery-server:8761/eureka/` inside Docker, not localhost. Both services use curl-based health checks against `/actuator/health`. The Gateway waits for Eureka to become healthy through `depends_on: condition: service_healthy`. Checks run every 10 seconds, with a 5-second timeout, 5 retries and a 40-second startup grace period. This controls initial startup, not ongoing dependency recovery or automatic restart on unhealthy status.
+
+### Clean Build and Verify the Infrastructure
+
+To rebuild without the build cache and recreate the containers:
 
 ```cmd
-set "JAVA_HOME=C:\Program Files\Java\jdk-25"
-set "PATH=%JAVA_HOME%\bin;%PATH%"
-mvn -version
+docker compose build --no-cache
+docker compose up -d --force-recreate --wait
+docker compose ps
+docker inspect --format "{{.State.Health.Status}}" discovery-server
+docker inspect --format "{{.State.Health.Status}}" api-gateway
 ```
 
-The JDK installation path is an example from the initial developer machine; adjust it to the path on your computer. These `set` commands affect only the current CMD window.
-
-### Discovery Server — Build and Run
-
-From the repository root on Windows CMD:
+Both containers should report `healthy`.
 
 ```cmd
-cd backend\discovery-server
-mvn clean verify
-mvn spring-boot:run
+curl -i http://localhost:8761/actuator/health
+curl -i http://localhost:8090/actuator/health
+curl -i -H "Accept: application/json" http://localhost:8761/eureka/apps/API-GATEWAY
+docker compose logs api-gateway | findstr /C:"registration status"
+curl -i http://localhost:8090/api/courses
 ```
 
-When the server starts, open:
+Open the [Eureka Dashboard](http://localhost:8761) and verify that API-GATEWAY is UP.
 
-**http://localhost:8761**
+| Test (26 November 2026) | Verified result |
+|---|---|
+| Compose configuration and image build | Passed |
+| Clean build (both images, 0.0.3) | Passed, 143.6 seconds |
+| Compose health checks | Both healthy |
+| Health-dependent startup | Passed |
+| Both containers and shared network | Running |
+| Eureka health | HTTP 200, UP |
+| Gateway health | HTTP 200, UP |
+| Eureka registry query | HTTP 200, API-GATEWAY UP |
+| Gateway registration | HTTP 204 |
+| Course route without registered destination | HTTP 503 (expected) |
 
-The Eureka Dashboard should load. `No instances available` is expected until other microservices register with Eureka.
+### Common Docker Commands
 
-To stop the server, press `Ctrl + C` in the terminal running it.
+| Command | Purpose |
+|---|---|
+| `docker compose up --build -d --wait` | Build and start services |
+| `docker compose up -d` | Start without explicitly requesting a rebuild |
+| `docker compose ps` | Display service status |
+| `docker compose logs --tail 30` | Display recent logs |
+| `docker compose logs -f` | Follow logs |
+| `docker compose stop` | Stop services |
+| `docker compose down` | Remove Compose containers and its network |
+| `docker compose restart` | Restart services |
 
-The Discovery Server is configured in `backend/discovery-server/src/main/resources/application.yaml` to use port `8761` and not register itself as a Eureka client.
+### Remaining Deployment Work
 
-### Frontend Setup
+The planned complete environment includes Eureka, API Gateway, Auth Service, Course Service, Enrollment Service, Grade Service, PostgreSQL databases, and the React frontend if included in the final deployment configuration. Each backend service must provide a Dockerfile. The current Compose configuration is for development, publishes ports on all host interfaces, runs the Java processes as root inside containers, and defines Compose health checks for both infrastructure services. Production hardening, broader application readiness validation, database configuration, business-service integration, successful request forwarding, load balancing, and final system testing remain pending. The 503 result is not evidence of successful forwarding or load distribution.
 
-Frontend setup instructions will be added after the React application is initialized.
+## 18. Git Workflow and Team Responsibilities
 
-### Docker Setup
-
-Docker Compose startup instructions will be documented after the Compose configuration is created.
-
-## 15. Git Workflow
-
-The team has agreed to use **two shared branches only**:
+### Branches
 
 | Branch | Purpose |
 |---|---|
-| `main` | Stable, reviewed milestones |
-| `development` | Active team development and integration |
+| main | Stable and reviewed milestones |
+| development | Active development and integration |
 
-Do not create `feature/*` or `fix/*` branches under the current team workflow unless the team explicitly changes this agreement.
-
-### Contribution Workflow
-
-1. Coordinate task ownership and affected files with teammates.
-2. Switch to `development` and pull the latest remote changes.
-3. Implement the assigned task without overwriting teammates' work.
-4. Run relevant builds and tests locally.
-5. Review changed files and confirm no secrets or generated build outputs are staged.
-6. Commit with a meaningful message.
-7. Pull/reconcile remote changes if necessary, then push to `development`.
-8. Update documentation when behavior, setup, or progress changes.
-9. Open a reviewed Pull Request from `development` to `main` when a milestone is stable.
+All team members should work on the shared development branch according to the agreed workflow.
 
 ### Start Working
 
-```cmd
-git switch development
-git pull --ff-only origin development
-git status --short
-```
+    git switch development
+    git pull --ff-only origin development
+    git status
+
+### Contribution Guidelines
+
+- Coordinate task ownership before making changes.
+- Avoid overwriting teammates' work.
+- Test changes before committing.
+- Use meaningful commit messages.
+- Never commit credentials or generated build outputs.
+- Update relevant documentation.
+- Record completed work in PROGRESS.md.
+- Resolve conflicts without discarding other members' contributions.
+- Do not force-push the shared development branch.
+- Merge stable milestones into main through reviewed Pull Requests.
 
 ### Example Commit Messages
 
-```text
-feat(auth): implement login endpoint
-feat(course): add course management
-fix(enrollment): prevent duplicate enrollment
-docs: update API documentation
-test(course): add service unit tests
-```
+    feat(auth): implement login endpoint
+    feat(course): add course management
+    fix(enrollment): prevent duplicate enrollment
+    test(grade): add grade validation tests
+    docs: update API documentation
+    chore: configure Docker environment
 
-Avoid direct commits to `main`. Because the team shares `development`, coordinate concurrent edits carefully and do not force-push or overwrite another member's changes.
+### Team Responsibilities
 
-## 16. Team Collaboration
-
-All team members should:
-
-- Use the agreed technology versions.
-- Follow the repository structure.
-- Work on assigned tasks on the shared `development` branch.
-- Coordinate before editing shared files or pushing concurrent changes.
-- Avoid committing credentials or environment secrets.
-- Keep documentation updated.
-- Test their work before committing and pushing.
-- Review changes before integrating milestones into `main`.
-- Communicate changes that affect shared APIs or database contracts.
-
-Task assignments and ownership will be documented after the team finalizes responsibilities.
-
-## 17. Project Documentation
-
-The `docs/` directory is organized as follows:
-
-| Directory | Intended Content |
+| Member | Responsibility |
 |---|---|
-| `docs/requirements/` | Software Requirements Specification (SRS), functional and non-functional requirements |
-| `docs/architecture/` | Architecture decisions, service responsibilities, communication |
-| `docs/uml/` | Use Case, Class, Sequence diagrams and OCL constraints |
-| `docs/database/` | Database design and ERD |
-| `docs/api/` | API specifications and testing references |
+| Member 1 | Infrastructure and Integration |
+| Member 2 | Authentication and Students |
+| Member 3 | Course Management |
+| Member 4 | Enrollment Management |
+| Member 5 | Grades and AOP |
+| Member 6 | Frontend and Documentation |
 
-Additional team handoff documents may be added under `docs/`, including a development guide and progress tracker. These are not yet claimed as completed deliverables.
+Detailed responsibilities, individual task checklists, contributions, blockers, and testing results are maintained in the Team Progress Tracker.
 
-## 18. Development Roadmap
+## 19. Project Documentation
 
-| Phase | Planned Work | Status |
-|---|---|---|
-| 1 | Environment setup | Completed locally |
-| 2 | Repository and team workflow | Established; documentation being updated |
-| 3 | Requirements and UML design | Planned / to be finalized |
-| 4A | Eureka Discovery Server | Completed and verified |
-| 4B | API Gateway | Next |
-| 5 | Authentication Service | Planned |
-| 6 | Course Service | Planned |
-| 7 | Enrollment Service | Planned |
-| 8 | Grade Service | Planned |
-| 9 | React Frontend | Planned |
-| 10 | Integration, testing, and Docker | Planned |
-| 11 | Final documentation and delivery | Planned |
+| Document | Purpose |
+|---|---|
+| [README.md](README.md) | Project overview and startup instructions |
+| [PROGRESS.md](docs/PROGRESS.md) | Team progress and individual contributions |
+| [DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md) | Development setup and team workflow |
+| [API_STANDARDS.md](docs/API_STANDARDS.md) | Shared API and security conventions |
+| [SRS.md](docs/requirements/SRS.md) | Software Requirements Specification |
+| [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) | System architecture |
 
-## 19. Security Considerations
+### Required Project Deliverables
 
-- Store passwords using a secure password-hashing mechanism.
-- Validate JWT tokens.
-- Enforce role-based access control.
-- Validate all user inputs.
-- Protect sensitive student information.
-- Do not commit passwords, database credentials, or JWT signing secrets.
-- Configure secrets through environment variables or other secure mechanisms.
-- Apply authorization checks at the appropriate service boundaries.
+- Software Requirements Specification.
+- Use Case Diagram and descriptions.
+- Class Diagram.
+- Sequence Diagram.
+- Activity Diagram.
+- Architecture Diagram.
+- Entity Relationship Diagram.
+- At least five OCL constraints.
+- OCL enforcement documentation.
+- AOP implementation and documentation.
+- Swagger/OpenAPI documentation.
+- Postman collection.
+- Dockerfiles.
+- Docker Compose configuration.
+- Final project report.
+- Individual member contributions.
+- Project cover sheet.
 
-## 20. Project Status and Team Handoff
+All diagrams and documentation must remain consistent with the actual implementation.
 
-**Last updated:** November 21, 2026
-**Active branch:** `development`
-**Last completed implementation commit:** `4b8cd1f` — `feat: initialize Eureka discovery server`
+## 20. Project Progress and Development Roadmap
 
-### Completed
+### Development Roadmap
 
-- Initial repository and folder structure created.
-- Development environment prepared.
-- Shared `development` branch created and pushed.
-- Eureka Discovery Server initialized with Spring Boot `4.1.3`, Spring Cloud `2025.1.5`, and Java `25`.
-- Eureka Server enabled and configured on port `8761`.
-- Maven build and tests passed using JDK 25.
-- Eureka Dashboard opened successfully at `http://localhost:8761`.
-- Discovery Server implementation committed and pushed to `development`.
+1. Environment and repository setup.
+2. Requirements analysis and initial documentation.
+3. Eureka Discovery Server.
+4. API Gateway.
+5. Shared API and security standards.
+6. Infrastructure containerization.
+7. Authentication and Students Service.
+8. Course Service.
+9. Enrollment Service.
+10. Grade Service and AOP.
+11. React Frontend.
+12. Service integration and testing.
+13. Complete Docker Compose environment.
+14. Final documentation and project delivery.
 
-### Next Steps
+### Infrastructure Checkpoint
 
-1. Initialize `backend/api-gateway` using Spring Initializr.
-2. Use Java `25`, Spring Boot `4.1.3`, and the team's Spring Cloud `2025.1.5` baseline.
-3. Add Spring Cloud Gateway Server WebFlux and Eureka Discovery Client dependencies.
-4. Configure Gateway service discovery and routing.
-5. Verify the Gateway build and its integration with Eureka before committing.
-6. Continue with Auth, Course, Enrollment, and Grade services.
-7. Complete requirements, UML, database, API, testing, and deployment documentation alongside implementation.
+The Eureka Discovery Server and API Gateway have been initialized, built, and verified locally.
 
-**Handoff note:** The API Gateway has **not** been generated, configured, or tested at this checkpoint. Do not mark it complete until the team verifies it.
+Gateway registration, health checks, and initial unavailable-service routing behavior have been tested.
+
+The initial Docker Compose environment, pinned multi-stage images, shared Docker network, Eureka registration, and both health endpoints have been verified. The initial milestone was published to development in commit `925337c`. Version 0.0.3 adds curl-based Compose health checks and health-dependent startup. Clean builds, both healthy containers, Eureka registration and the expected unavailable-course response were verified on 26 November 2026. Publication of the 0.0.3 changes is pending.
+
+Successful business-service routing, load balancing, security implementation, complete application deployment, and full system integration remain pending verification.
+
+For the latest status of every task and team member, refer to:
+
+**[Team Progress Tracker](docs/PROGRESS.md)**
+
+This README should be updated when project architecture, setup instructions, dependencies, or major milestones change. Daily task updates should be recorded in PROGRESS.md.
 
 ---
 
 **Project:** University Course Registration System
+
 **Course:** Software Engineering II
+
 **Architecture:** Microservices
+
 **Repository:** https://github.com/KiraIIV-max/course-registration-system
-**Documentation Status:** Working documentation; update it as the project progresses.
+
+**Documentation Status:** Active Development
