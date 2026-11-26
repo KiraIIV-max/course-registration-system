@@ -70,11 +70,14 @@ Each member is responsible for keeping their assigned section up to date.
 - [x] Test initial unavailable-service routing behavior.
 - [x] Draft shared API and security standards.
 - [ ] Obtain team approval for shared standards.
-- [ ] Update existing infrastructure documentation.
-- [ ] Create Eureka Dockerfile.
-- [ ] Create API Gateway Dockerfile.
-- [ ] Create initial Docker Compose configuration.
-- [ ] Verify infrastructure containers.
+- [x] Update existing infrastructure documentation.
+- [x] Create Eureka Dockerfile.
+- [x] Create API Gateway Dockerfile.
+- [x] Create initial Docker Compose configuration.
+- [x] Verify infrastructure containers.
+- [x] Standardize infrastructure Maven wrappers and pin Docker base images.
+- [ ] Commit and push the Docker milestone and documentation.
+- [ ] Add Compose readiness checks and verify a clean build on another machine.
 - [ ] Prepare Architecture Diagram.
 - [ ] Verify successful business-service routing.
 - [ ] Perform Load Balancing Testing.
@@ -103,7 +106,16 @@ Each member is responsible for keeping their assigned section up to date.
 | Initial Grade Route | Expected HTTP 503 |
 | Successful Business-Service Routing | Pending |
 | Load Balancing Testing | Pending |
-| Docker Testing | Pending |
+| Docker Compose configuration and cached build | Passed |
+| Multi-stage infrastructure images | Built and tested |
+| Shared Docker bridge network | Verified |
+| Containerized Eureka health | HTTP 200 — UP |
+| Containerized Gateway health | HTTP 200 — UP |
+| Eureka registry lookup | HTTP 200 — API-GATEWAY UP |
+| Gateway registration logs | HTTP 204 |
+| Containerized course route without destination | Expected HTTP 503 |
+| Clean Compose build on another machine | Pending |
+| Compose readiness checks | Pending |
 
 The HTTP 503 responses are expected while the destination business services are unavailable. They do not confirm successful request forwarding or load distribution.
 
@@ -114,7 +126,8 @@ The HTTP 503 responses are expected while the destination business services are 
 | 2026-11-21 | Eureka Discovery Server implementation | 4b8cd1f |
 | — | Initial project documentation | 1ba3026 |
 | 2026-11-26 | API Gateway initialization and routing | de72ed2 |
-| 2026-11-26 | Draft shared API and security standards | Pending commit |
+| 2026-11-26 | Draft shared API and security standards and documentation | 5c6318f |
+| 2026-11-26 | Pinned multi-stage Dockerfiles, Maven Wrapper alignment, initial Compose, verified infrastructure and updated documentation | Pending commit |
 
 ### Blockers
 
@@ -125,12 +138,14 @@ The HTTP 503 responses are expected while the destination business services are 
 
 ### Next Steps
 
-1. Update infrastructure documentation.
-2. Create Eureka Dockerfile.
-3. Create API Gateway Dockerfile.
-4. Prepare initial Docker Compose configuration.
-5. Verify containerized infrastructure.
-6. Coordinate integration with other members.
+1. Review, commit and push the Docker milestone and documentation.
+2. Coordinate team approval of shared API and security standards.
+3. Prepare the Architecture Diagram with the team.
+4. Verify a clean Compose build and add readiness checks.
+5. Integrate business services as they become available.
+6. Verify successful routing, load balancing, security and final system integration.
+
+The initial Compose environment contains only Eureka and API Gateway. Docker packaging skips Maven tests; local Maven verification was performed separately. Compose depends_on controls startup order, not readiness. Full deployment remains pending.
 
 ---
 
@@ -439,15 +454,15 @@ The HTTP 503 responses are expected while the destination business services are 
 
 | Service | Port | Status |
 |---|---:|---|
-| Discovery Server | 8761 | 🟢 Verified locally |
-| API Gateway | 8090 | 🟢 Infrastructure verified |
+| Discovery Server | 8761 | 🟢 Verified locally and in Docker |
+| API Gateway | 8090 | 🟢 Infrastructure verified locally and in Docker |
 | Auth Service | 8081 | ⚫ Not Reported |
 | Course Service | 8082 | ⚫ Not Reported |
 | Enrollment Service | 8083 | ⚫ Not Reported |
 | Grade Service | 8084 | ⚫ Not Reported |
 | React Frontend | 5173 | ⚫ Not Reported |
 | PostgreSQL | 5432 | Database integration pending verification |
-| Docker Compose | — | ⚪ To Do |
+| Docker Compose | — | 🟢 Initial infrastructure verified; complete system pending |
 
 ## 11. Technology Baseline
 
@@ -463,6 +478,8 @@ The HTTP 503 responses are expected while the destination business services are 
 | Docker Engine | 29.8.0 |
 | Docker Compose | 5.5.1 |
 | Git | 2.49.0 |
+
+Infrastructure Maven Wrapper: 3.3.4 (Maven 3.10.1). Docker Java runtime: Eclipse Temurin 25.0.5.1+2. Docker Engine 29.9.3 and Compose 5.7.0 were tested locally; team adoption is pending.
 
 These versions represent the recorded team baseline. Each member must verify their local environment and service builds.
 
@@ -482,8 +499,8 @@ These versions represent the recorded team baseline. Each member must verify the
 | API & Security Standards | Member 1 + Member 2 | Draft |
 | Swagger Documentation | Backend Members | Not Reported |
 | Postman Collection | Member 1 + Backend Members | Pending |
-| Dockerfiles | Backend Members | Pending |
-| Docker Compose | Member 1 | Pending |
+| Dockerfiles | Backend Members | Eureka and Gateway verified; business services pending |
+| Docker Compose | Member 1 | Initial infrastructure verified; final configuration pending |
 | AOP Implementation | Member 5 | Not Reported |
 | Final Report | Member 6 + Team | Pending |
 | Member Contributions | All Members | In Progress |
@@ -503,14 +520,23 @@ These versions represent the recorded team baseline. Each member must verify the
 Every team member must:
 
 1. Update their own section after completing a task.
+
 2. Mark a task as completed only after verifying its implementation.
+
 3. Record the date and Git commit ID.
+
 4. Record relevant testing results.
+
 5. Report blockers and dependencies.
+
 6. Update their next steps.
+
 7. Pull the latest development branch before editing.
+
 8. Avoid modifying other members' sections without coordination.
+
 9. Never include credentials, tokens, or secrets.
+
 10. Commit their own work and progress updates.
 
 An unchecked task does not necessarily mean work has not started. Members must report their actual status.

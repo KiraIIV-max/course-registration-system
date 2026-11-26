@@ -1,10 +1,10 @@
 # System Architecture — University Course Registration System
 
-**Version:** Draft 1.1
+**Version:** Draft 1.2
 
 **Date:** November 26, 2026
 
-**Status:** Infrastructure verified locally — business architecture pending final approval.
+**Status:** Initial infrastructure verified locally and in Docker Compose — business architecture pending final approval.
 
 ## 1. Architecture Overview
 
@@ -16,7 +16,7 @@ The architecture separates business responsibilities into independent services t
 
 The Eureka Discovery Server and API Gateway have been implemented and verified locally.
 
-Business microservices, security implementation, database integration, and containerized deployment remain subject to implementation and verification.
+Initial containerized deployment of Eureka and API Gateway has also been verified. Business microservices, security implementation, database integration, and complete application deployment remain pending.
 
 ## 2. Logical Architecture
 
@@ -80,9 +80,10 @@ Additional project directories:
 
 - frontend/
 - docker/
+- compose.yaml (repository root)
 - docs/
 
-Each backend service is maintained as an independent Spring Boot Maven project.
+Each backend service is maintained as an independent Spring Boot Maven project. Discovery Server and API Gateway now contain a Dockerfile and .dockerignore.
 
 ## 5. Service Names and Ports
 
@@ -97,7 +98,7 @@ Each backend service is maintained as an independent Spring Boot Maven project.
 | PostgreSQL | postgresql | 5432 |
 | React Frontend | frontend | 5173 |
 
-Discovery Server and Gateway ports have been verified locally.
+Discovery Server and Gateway ports have been verified locally and through Docker Compose.
 
 Remaining ports represent the proposed development assignments.
 
@@ -422,48 +423,57 @@ The final report must identify where each approved constraint is enforced.
 
 ## 13. Deployment Architecture
 
-Docker will be used to package the application components.
+### 13.1 Current Deployment
 
-### Planned Containers
+The root `compose.yaml` manages the initial infrastructure. Both services have been built and tested together.
 
-| Container | Responsibility |
-|---|---|
-| discovery-server | Eureka service registry |
-| api-gateway | API routing and load balancing |
-| auth-service | Authentication and student management |
-| course-service | Course management |
-| enrollment-service | Enrollment management |
-| grade-service | Grade management |
-| PostgreSQL container or containers | Database persistence |
-| frontend | React application, if included in deployment |
+| Service | Image | Published port | Status |
+|---|---|---:|---|
+| discovery-server | course-registration/discovery-server:0.0.2 | 8761 | Verified |
+| api-gateway | course-registration/api-gateway:0.0.2 | 8090 | Verified |
 
-### Docker Networking
+The Compose project is `course-registration-system`. Both services use the shared bridge network `course-registration-network` (generated name: `course-registration-system_course-registration-network`).
 
-Containers will communicate through the Docker Compose network.
+### 13.2 Build Architecture
 
-Internal container communication must use appropriate service names rather than assuming localhost refers to another container.
+Both Dockerfiles use a multi-stage build: a Java 25 JDK builder packages the source using Maven Wrapper 3.3.4 and Maven 3.10.1; a Java 25 JRE runtime receives the packaged JAR. The runtime uses Temurin 25.0.5.1+2. Local build output is excluded by `.dockerignore`. Tests are skipped during Docker packaging and must be run separately.
 
-For example, the proposed containerized Eureka Registry URL is:
+Pinned base images:
 
-http://discovery-server:8761/eureka/
+- `eclipse-temurin:25-jdk@sha256:ce2ef9d2d67a68de5e196d4de9d743327c44a10b57fe02ec39f572c652cacfd3`
+- `eclipse-temurin:25-jre@sha256:4ed132f6832e9804b123e89a849a7b4502756ae64a4ee08ebab939d9d5d0a9fa`
 
-### Deployment Requirements
+### 13.3 Docker Networking and Startup
+
+The Gateway uses `http://discovery-server:8761/eureka/` inside Docker. Host-based development uses `http://localhost:8761/eureka/`. Container IP addresses must not be hardcoded.
+
+Compose starts Eureka before the Gateway using `depends_on`. This controls startup order, not readiness. Compose-level health checks are not yet configured. Both application health endpoints have been verified manually. The current configuration publishes both infrastructure ports on all host interfaces and uses `restart: unless-stopped`. It is a development configuration, not a production-hardened deployment.
+
+### 13.4 Planned Complete Deployment
+
+| Container | Responsibility | Status |
+|---|---|---|
+| discovery-server | Eureka service registry | Verified |
+| api-gateway | API routing and load balancing | Initial infrastructure verified |
+| auth-service | Authentication and student management | Pending integration |
+| course-service | Course management | Pending integration |
+| enrollment-service | Enrollment management | Pending integration |
+| grade-service | Grade management | Pending integration |
+| PostgreSQL container or containers | Database persistence | Pending design and integration |
+| frontend | React application, if included in deployment | Pending integration |
+
+### 13.5 Deployment Requirements
 
 - Dockerfile for each backend service.
-- Compatible Java runtime images.
-- Environment-based configuration.
-- Secure credential management.
+- Compatible Java runtime images and reproducible builds.
+- Environment-based configuration and secure credential management.
 - Persistent database volumes.
-- Appropriate health checks.
-- Service startup coordination.
-- Verified Eureka registration.
-- Verified Gateway routing.
+- Appropriate health checks and readiness coordination.
+- Verified Eureka registration and successful Gateway routing.
+- Verified load balancing across multiple service instances.
+- Review runtime permissions and exposed ports before production deployment.
 
-The API Gateway should be the public entry point for business APIs.
-
-Other service ports should only be exposed when required for development or administration.
-
-Dockerfiles, image versions, networking, and Docker Compose configuration remain pending implementation and testing.
+The API Gateway should be the public entry point for business APIs. Other service ports should only be exposed when required for development or administration. Avoid fixed container names for services intended to be replicated.
 
 ## 14. Technology Baseline
 
@@ -473,6 +483,8 @@ Dockerfiles, image versions, networking, and Docker Compose configuration remain
 | Spring Boot | 4.1.3 |
 | Spring Cloud | 2025.1.5 |
 | Maven | 3.10.1 |
+| Maven Wrapper (infrastructure) | 3.3.4 |
+| Docker Java runtime | Temurin 25.0.5.1+2 |
 | PostgreSQL | 18.7 |
 | Node.js | 22.16.0 |
 | npm | 10.9.2 |
@@ -490,7 +502,7 @@ Dockerfiles, image versions, networking, and Docker Compose configuration remain
 
 These technologies represent the recorded team baseline and intended architectural choices.
 
-Not every component or dependency has been implemented or verified.
+Not every component or dependency has been implemented or verified. Docker Engine 29.9.3 and Docker Compose 5.7.0 (Docker Desktop 4.99.0) were tested locally; the recorded team baseline remains unchanged pending team approval.
 
 ## 15. Implemented Infrastructure
 
@@ -581,6 +593,33 @@ HTTP 503 is expected while destination business services are unavailable.
 
 This does not confirm successful forwarding or load balancing.
 
+### Docker Compose Verification
+
+From the repository root, with local applications stopped:
+
+```cmd
+docker compose config
+docker compose up --build -d
+docker compose ps
+curl -i http://localhost:8761/actuator/health
+curl -i http://localhost:8090/actuator/health
+curl -i -H "Accept: application/json" http://localhost:8761/eureka/apps/API-GATEWAY
+docker compose logs api-gateway | findstr /C:"registration status"
+curl -i http://localhost:8090/api/courses
+```
+
+| Test (November 26, 2026) | Result |
+|---|---|
+| Compose configuration and image builds | Passed (cached build layers reused) |
+| Shared network and container startup | Passed |
+| Eureka health | HTTP 200, UP |
+| Gateway health | HTTP 200, UP |
+| Eureka registry lookup | HTTP 200, API-GATEWAY UP |
+| Gateway registration | HTTP 204 |
+| Course route without destination service | HTTP 503, expected |
+
+A clean build on another team member's machine remains to be verified. Successful business-service forwarding and actual load distribution are not established by these tests.
+
 ## 17. Architecture Decisions Requiring Approval
 
 | Decision | Responsible Members |
@@ -601,19 +640,18 @@ These responsibilities are coordination proposals and must be reviewed by the te
 
 ## 18. Next Infrastructure Milestone
 
-The next infrastructure milestone is containerization.
+Initial containerization and two-service integration testing are complete. Documentation and Git publication are in progress.
 
-Planned work:
+Remaining work:
 
-1. Create Eureka Discovery Server Dockerfile.
-2. Create API Gateway Dockerfile.
-3. Prepare initial Docker Compose configuration.
-4. Configure container networking.
-5. Verify Eureka startup inside Docker.
-6. Verify Gateway startup inside Docker.
-7. Verify Gateway registration with containerized Eureka.
-8. Document verified startup instructions.
-9. Integrate business services as they become available.
+1. Publish the verified infrastructure milestone on development.
+2. Review and approve shared API, security, and version conventions.
+3. Prepare and review the team-created Architecture Diagram.
+4. Integrate business services and PostgreSQL as they become available.
+5. Configure Compose health checks and readiness coordination.
+6. Verify successful Gateway routing, inter-service communication, security, and actual load balancing.
+7. Verify the complete Docker Compose environment and system behavior.
+8. Finalize architecture documentation and testing evidence.
 
 Detailed task status is maintained in PROGRESS.md.
 

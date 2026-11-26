@@ -22,12 +22,16 @@ All contributors should follow these conventions to maintain consistency and avo
 | Spring Boot | 4.1.3 |
 | Spring Cloud | 2025.1.5 |
 | Apache Maven | 3.10.1 |
+| Infrastructure Maven Wrapper | 3.3.4 |
+| Container Java | Temurin 25.0.5.1+2 |
 | PostgreSQL | 18.7 |
 | Node.js | 22.16.0 |
 | npm | 10.9.2 |
 | Docker Engine | 29.8.0 |
 | Docker Compose | 5.5.1 |
 | Git | 2.49.0 |
+
+Docker Engine 29.9.3 and Docker Compose 5.7.0 were tested locally. The recorded team baseline remains unchanged pending team approval.
 
 ### Version Management Rules
 
@@ -103,6 +107,7 @@ These commands affect only the current CMD session.
     |   `-- PROGRESS.md
     |-- .github/
     |   `-- workflows/
+    |-- compose.yaml
     |-- .editorconfig
     |-- .gitignore
     `-- README.md
@@ -138,7 +143,9 @@ The remaining application ports are proposed assignments for team integration.
 
 The frontend URL becomes available after the frontend is initialized and started.
 
-## 6. Running Backend Infrastructure
+## 6. Running Backend Infrastructure Without Docker
+
+Alternatively, use Docker Compose (Section 15). Do not run both modes on the same ports.
 
 ### Terminal 1 — Discovery Server
 
@@ -516,7 +523,64 @@ Member 1 coordinates the Docker Compose configuration for the complete applicati
 - Verify Eureka registration inside the containerized environment.
 - Verify Gateway routing inside the containerized environment.
 
-Docker build and startup commands will be documented after the configuration is implemented and tested.
+### Current Docker Infrastructure
+
+The root `compose.yaml` manages `discovery-server` (8761) and `api-gateway` (8090), using images `course-registration/discovery-server:0.0.2` and `course-registration/api-gateway:0.0.2`. Both services have multi-stage Dockerfiles and `.dockerignore` files. Maven Wrapper 3.3.4 downloads Maven 3.10.1. Build from source; no local target directory is required. Run `mvnw.cmd clean verify` in each service directory before packaging because Docker builds skip tests.
+
+Pinned base images:
+
+- `eclipse-temurin:25-jdk@sha256:ce2ef9d2d67a68de5e196d4de9d743327c44a10b57fe02ec39f572c652cacfd3`
+- `eclipse-temurin:25-jre@sha256:4ed132f6832e9804b123e89a849a7b4502756ae64a4ee08ebab939d9d5d0a9fa`
+
+Exclude target/, .git/, IDE directories, *.iml and *.log from build contexts. Retain Maven Wrapper, pom.xml and source files. Review pinned images periodically for security updates.
+
+### Start and Verify
+
+Start Docker Desktop in Linux container mode. From the repository root, ensure ports 8761 and 8090 are free.
+
+```cmd
+docker compose config
+docker compose up --build -d
+docker compose ps
+docker compose logs --tail 50
+```
+
+The Gateway uses `http://discovery-server:8761/eureka/` on the Compose bridge network. The host uses `http://localhost:8761/eureka/`. Do not hardcode container IP addresses. The current depends_on controls startup order, not readiness; allow time for registration.
+
+```cmd
+curl -i http://localhost:8761/actuator/health
+curl -i http://localhost:8090/actuator/health
+curl -i -H "Accept: application/json" http://localhost:8761/eureka/apps/API-GATEWAY
+docker compose logs api-gateway | findstr /C:"registration status"
+curl -i http://localhost:8090/api/courses
+```
+
+| Test (November 26, 2026) | Result |
+|---|---|
+| Compose configuration and pinned image builds | Passed |
+| Containers and network | Running |
+| Eureka and Gateway health | HTTP 200, UP |
+| Eureka registry lookup | HTTP 200, API-GATEWAY UP |
+| Gateway registration | HTTP 204 |
+| Course route without destination | HTTP 503, expected |
+
+### Common Commands
+
+| Command | Purpose |
+|---|---|
+| `docker compose up -d` | Start without explicitly rebuilding |
+| `docker compose up --build -d api-gateway` | Rebuild and start Gateway |
+| `docker compose ps` | Show service status |
+| `docker compose logs -f` | Follow logs |
+| `docker compose stop` | Stop services |
+| `docker compose start` | Start stopped services |
+| `docker compose restart` | Restart services |
+| `docker compose down` | Remove Compose containers and managed network |
+| `docker compose build --no-cache` | Build without cached layers |
+
+### Remaining Work
+
+Add the four business services, PostgreSQL configuration, and frontend if included in the final deployment. Add Compose health checks and readiness handling. Current containers run as root and publish ports on all host interfaces; review these settings before production use. Verify a clean build on another team member's machine, successful business-service routing, load balancing and complete system integration. The initial 503 response is not evidence of successful forwarding.
 
 ## 16. Documentation Responsibilities
 
@@ -637,7 +701,7 @@ The following infrastructure components have been verified locally:
 
 Shared API and security standards have been drafted and require team approval.
 
-Successful business-service routing, load balancing, Docker deployment, security implementation, and complete system integration remain pending verification.
+The initial Docker Compose environment, pinned multi-stage images, container networking, Eureka registration and both health endpoints have been verified. Documentation and Git publication are in progress. Successful business-service routing, load balancing, Compose health checks, security implementation and complete system integration remain pending verification.
 
 For the latest development status, refer to [PROGRESS.md](PROGRESS.md).
 
