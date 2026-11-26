@@ -76,8 +76,11 @@ Each member is responsible for keeping their assigned section up to date.
 - [x] Create initial Docker Compose configuration.
 - [x] Verify infrastructure containers.
 - [x] Standardize infrastructure Maven wrappers and pin Docker base images.
-- [ ] Commit and push the Docker milestone and documentation.
-- [ ] Add Compose readiness checks and verify a clean build on another machine.
+- [x] Commit and push the initial Docker milestone and documentation (925337c).
+- [x] Add Compose health checks and healthy startup dependency.
+- [x] Verify a clean Docker Compose build locally.
+- [ ] Verify a clean build on another team member’s machine.
+- [ ] Commit and push health-check improvements and updated documentation.
 - [ ] Prepare Architecture Diagram.
 - [ ] Verify successful business-service routing.
 - [ ] Perform Load Balancing Testing.
@@ -115,7 +118,10 @@ Each member is responsible for keeping their assigned section up to date.
 | Gateway registration logs | HTTP 204 |
 | Containerized course route without destination | Expected HTTP 503 |
 | Clean Compose build on another machine | Pending |
-| Compose readiness checks | Pending |
+| Compose readiness checks | Passed — both containers healthy (0.0.3) |
+| Local clean Compose build | Passed — both images built in 143.6 seconds |
+| Healthy startup dependency | Passed — Eureka healthy before Gateway startup |
+| Version 0.0.3 regression checks | Passed — health 200, registry UP, registration 204, expected course route 503 |
 
 The HTTP 503 responses are expected while the destination business services are unavailable. They do not confirm successful request forwarding or load distribution.
 
@@ -127,25 +133,29 @@ The HTTP 503 responses are expected while the destination business services are 
 | — | Initial project documentation | 1ba3026 |
 | 2026-11-26 | API Gateway initialization and routing | de72ed2 |
 | 2026-11-26 | Draft shared API and security standards and documentation | 5c6318f |
-| 2026-11-26 | Pinned multi-stage Dockerfiles, Maven Wrapper alignment, initial Compose, verified infrastructure and updated documentation | Pending commit |
+| 2026-11-26 | Pinned multi-stage Dockerfiles, Maven Wrapper alignment, initial Compose, verified infrastructure and updated documentation | 925337c |
+| 2026-11-26 | Compose health checks, curl runtime installation, healthy startup dependency, clean build and infrastructure regression testing | Pending commit |
 
 ### Blockers
 
 - Load balancing testing requires multiple running instances of a business microservice.
+
 - Successful business-service routing requires running destination services.
+
 - Final integration depends on the remaining team members.
+
 - Shared security conventions require coordination with the authentication service owner.
 
 ### Next Steps
 
-1. Review, commit and push the Docker milestone and documentation.
+1. Review, commit and push the health-check milestone and updated documentation.
 2. Coordinate team approval of shared API and security standards.
 3. Prepare the Architecture Diagram with the team.
-4. Verify a clean Compose build and add readiness checks.
+4. Verify a clean Compose build on another team member's machine.
 5. Integrate business services as they become available.
 6. Verify successful routing, load balancing, security and final system integration.
 
-The initial Compose environment contains only Eureka and API Gateway. Docker packaging skips Maven tests; local Maven verification was performed separately. Compose depends_on controls startup order, not readiness. Full deployment remains pending.
+The initial Compose environment contains only Eureka and API Gateway. Both version 0.0.3 containers are healthy. Health checks use curl against `/actuator/health` every 10 seconds, with a 5-second timeout, 5 retries and a 40-second start period. Gateway startup depends on Eureka being healthy. The curl package version is not pinned. Docker packaging skips Maven tests; local Maven verification was performed separately. Full deployment remains pending.
 
 ---
 
@@ -462,7 +472,7 @@ The initial Compose environment contains only Eureka and API Gateway. Docker pac
 | Grade Service | 8084 | ⚫ Not Reported |
 | React Frontend | 5173 | ⚫ Not Reported |
 | PostgreSQL | 5432 | Database integration pending verification |
-| Docker Compose | — | 🟢 Initial infrastructure verified; complete system pending |
+| Docker Compose | — | 🟢 Initial infrastructure and health checks verified (0.0.3); complete system pending |
 
 ## 11. Technology Baseline
 
@@ -500,7 +510,7 @@ These versions represent the recorded team baseline. Each member must verify the
 | Swagger Documentation | Backend Members | Not Reported |
 | Postman Collection | Member 1 + Backend Members | Pending |
 | Dockerfiles | Backend Members | Eureka and Gateway verified; business services pending |
-| Docker Compose | Member 1 | Initial infrastructure verified; final configuration pending |
+| Docker Compose | Member 1 | Initial infrastructure and health checks verified; final configuration pending |
 | AOP Implementation | Member 5 | Not Reported |
 | Final Report | Member 6 + Team | Pending |
 | Member Contributions | All Members | In Progress |
@@ -509,10 +519,15 @@ These versions represent the recorded team baseline. Each member must verify the
 ## 13. Shared Documentation
 
 - README.md — Project overview and startup instructions.
+
 - docs/DEVELOPMENT_GUIDE.md — Development environment and team workflow.
+
 - docs/API_STANDARDS.md — Proposed API and security conventions.
+
 - docs/requirements/SRS.md — Software Requirements Specification.
+
 - docs/architecture/ARCHITECTURE.md — Architecture documentation.
+
 - docs/PROGRESS.md — Team progress and contribution tracking.
 
 ## 14. Progress Update Rules

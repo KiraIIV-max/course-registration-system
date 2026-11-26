@@ -525,7 +525,7 @@ Member 1 coordinates the Docker Compose configuration for the complete applicati
 
 ### Current Docker Infrastructure
 
-The root `compose.yaml` manages `discovery-server` (8761) and `api-gateway` (8090), using images `course-registration/discovery-server:0.0.2` and `course-registration/api-gateway:0.0.2`. Both services have multi-stage Dockerfiles and `.dockerignore` files. Maven Wrapper 3.3.4 downloads Maven 3.10.1. Build from source; no local target directory is required. Run `mvnw.cmd clean verify` in each service directory before packaging because Docker builds skip tests.
+The root `compose.yaml` manages `discovery-server` (8761) and `api-gateway` (8090), using images `course-registration/discovery-server:0.0.3` and `course-registration/api-gateway:0.0.3`. Both services have multi-stage Dockerfiles and `.dockerignore` files. Maven Wrapper 3.3.4 downloads Maven 3.10.1. Build from source; no local target directory is required. Run `mvnw.cmd clean verify` in each service directory before packaging because Docker builds skip tests.
 
 Pinned base images:
 
@@ -534,20 +534,52 @@ Pinned base images:
 
 Exclude target/, .git/, IDE directories, *.iml and *.log from build contexts. Retain Maven Wrapper, pom.xml and source files. Review pinned images periodically for security updates.
 
+### Health Checks and Startup Dependencies
+
+Both runtime images install curl using apt-get with `--no-install-recommends` and remove the APT package lists afterward. The base images are pinned, but the curl package version is not pinned.
+
+| Setting | Value |
+|---|---|
+| Eureka health endpoint | `http://localhost:8761/actuator/health` |
+| Gateway health endpoint | `http://localhost:8090/actuator/health` |
+| Health command | `curl -fsS` against the respective endpoint |
+| Interval | 10 seconds |
+| Timeout | 5 seconds |
+| Retries | 5 |
+| Start period | 40 seconds |
+| Gateway dependency | `service_healthy` |
+
+Health checks verify the Actuator HTTP response. They do not prove successful business-service routing or load balancing. An unhealthy status alone does not trigger an automatic restart.
+
+### Clean Build and Recreate
+
+From the repository root:
+
+```cmd
+docker compose config --quiet
+docker compose build --no-cache
+docker compose up -d --force-recreate --wait
+docker compose ps
+```
+
+The clean build was verified locally on November 26, 2026, completing both images in approximately 143.6 seconds. Maven tests are skipped during Docker packaging; run the separate Maven verification commands before integration.
+
 ### Start and Verify
 
 Start Docker Desktop in Linux container mode. From the repository root, ensure ports 8761 and 8090 are free.
 
 ```cmd
-docker compose config
-docker compose up --build -d
+docker compose config --quiet
+docker compose up --build -d --wait
 docker compose ps
 docker compose logs --tail 50
 ```
 
-The Gateway uses `http://discovery-server:8761/eureka/` on the Compose bridge network. The host uses `http://localhost:8761/eureka/`. Do not hardcode container IP addresses. The current depends_on controls startup order, not readiness; allow time for registration.
+The Gateway uses `http://discovery-server:8761/eureka/` on the Compose bridge network. The host uses `http://localhost:8761/eureka/`. Do not hardcode container IP addresses. The Gateway depends on Discovery Server with `condition: service_healthy`, so Compose waits for Eureka to pass its health check before starting the Gateway. Eureka registration must still be verified separately.
 
 ```cmd
+docker inspect --format "{{.State.Health.Status}}" discovery-server
+docker inspect --format "{{.State.Health.Status}}" api-gateway
 curl -i http://localhost:8761/actuator/health
 curl -i http://localhost:8090/actuator/health
 curl -i -H "Accept: application/json" http://localhost:8761/eureka/apps/API-GATEWAY
@@ -558,7 +590,11 @@ curl -i http://localhost:8090/api/courses
 | Test (November 26, 2026) | Result |
 |---|---|
 | Compose configuration and pinned image builds | Passed |
+| Clean build without build cache | Passed, both images built in 143.6s |
 | Containers and network | Running |
+| Compose startup with --wait | Passed |
+| Discovery Server container health | Healthy |
+| API Gateway container health | Healthy |
 | Eureka and Gateway health | HTTP 200, UP |
 | Eureka registry lookup | HTTP 200, API-GATEWAY UP |
 | Gateway registration | HTTP 204 |
@@ -569,6 +605,8 @@ curl -i http://localhost:8090/api/courses
 | Command | Purpose |
 |---|---|
 | `docker compose up -d` | Start without explicitly rebuilding |
+| `docker compose up --build -d --wait` | Build, start and wait for healthy services |
+| `docker compose up -d --force-recreate --wait` | Recreate containers and wait for health |
 | `docker compose up --build -d api-gateway` | Rebuild and start Gateway |
 | `docker compose ps` | Show service status |
 | `docker compose logs -f` | Follow logs |
@@ -580,7 +618,7 @@ curl -i http://localhost:8090/api/courses
 
 ### Remaining Work
 
-Add the four business services, PostgreSQL configuration, and frontend if included in the final deployment. Add Compose health checks and readiness handling. Current containers run as root and publish ports on all host interfaces; review these settings before production use. Verify a clean build on another team member's machine, successful business-service routing, load balancing and complete system integration. The initial 503 response is not evidence of successful forwarding.
+Add the four business services, PostgreSQL configuration, and frontend if included in the final deployment. Extend health checks and readiness handling to future services. Current containers run as root and publish ports on all host interfaces; review these settings before production use. Verify a clean build on another team member's machine, successful business-service routing, load balancing and complete system integration. The initial 503 response is not evidence of successful forwarding.
 
 ## 16. Documentation Responsibilities
 
@@ -650,6 +688,18 @@ Check whether an existing application instance is running before attempting to s
 - Verify the configured Eureka service URL.
 - Allow time for service registration.
 
+### Docker Container Unhealthy
+
+```cmd
+docker compose ps
+docker compose logs --tail 50 discovery-server
+docker compose logs --tail 50 api-gateway
+docker inspect --format "{{json .State.Health}}" discovery-server
+docker inspect --format "{{json .State.Health}}" api-gateway
+```
+
+Check the health endpoint, configured port and runtime curl installation. If curl is missing, verify the Dockerfile and recreate containers from the updated images rather than modifying running containers manually.
+
 ### Gateway HTTP 503
 
 - Verify that the destination service is running.
@@ -701,7 +751,7 @@ The following infrastructure components have been verified locally:
 
 Shared API and security standards have been drafted and require team approval.
 
-The initial Docker Compose environment, pinned multi-stage images, container networking, Eureka registration and both health endpoints have been verified. Documentation and Git publication are in progress. Successful business-service routing, load balancing, Compose health checks, security implementation and complete system integration remain pending verification.
+The initial Docker Compose environment was published in commit `925337c` on development. The updated 0.0.3 images, clean build, Compose health checks, healthy startup dependency, container networking, Eureka registration and both health endpoints have been verified locally. Documentation and Git publication of the 0.0.3 milestone are in progress. Successful business-service routing, load balancing, security implementation and complete system integration remain pending verification.
 
 For the latest development status, refer to [PROGRESS.md](PROGRESS.md).
 

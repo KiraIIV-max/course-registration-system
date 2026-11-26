@@ -6,10 +6,16 @@ services:
     build:
       context: ./backend/discovery-server
       dockerfile: Dockerfile
-    image: course-registration/discovery-server:0.0.2
+    image: course-registration/discovery-server:0.0.3
     container_name: discovery-server
     ports:
       - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     networks:
       - course-registration-network
     restart: unless-stopped
@@ -18,7 +24,7 @@ services:
     build:
       context: ./backend/api-gateway
       dockerfile: Dockerfile
-    image: course-registration/api-gateway:0.0.2
+    image: course-registration/api-gateway:0.0.3
     container_name: api-gateway
     ports:
       - "8090:8090"
@@ -26,7 +32,14 @@ services:
       - "--server.port=8090"
       - "--eureka.client.service-url.defaultZone=http://discovery-server:8761/eureka/"
     depends_on:
-      - discovery-server
+      discovery-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8090/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     networks:
       - course-registration-network
     restart: unless-stopped

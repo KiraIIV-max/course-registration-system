@@ -2,13 +2,13 @@
 
 A microservices-based university course registration platform built using Spring Boot, Spring Cloud, PostgreSQL, and React.
 
-****Course:**** Software Engineering II
+**Course:** Software Engineering II
 
-****Architecture:**** Microservices Architecture
+**Architecture:** Microservices Architecture
 
-****Project Status:**** Active Development
+**Project Status:** Active Development
 
-****Active Branch:**** development
+**Active Branch:** development
 
 ## 1. Project Overview
 
@@ -248,7 +248,7 @@ Business service ports are the proposed development assignments and must be coor
 
 The API Gateway is the primary entry point for external clients.
 
-****Base URL:**** http://localhost:8090
+**Base URL:** http://localhost:8090
 
 ### Configured Routes
 
@@ -471,7 +471,6 @@ Verify the configuration:
     mvn -version
 
 Adjust installation paths according to your computer.
-
 These commands affect only the current CMD session.
 
 ## 16. Running the Backend Infrastructure Locally (Without Docker)
@@ -560,12 +559,12 @@ The Discovery Server and API Gateway have been containerized and successfully te
 
 | Service | Image | Host port |
 |---|---|---:|
-| Discovery Server | `course-registration/discovery-server:0.0.2` | 8761 |
-| API Gateway | `course-registration/api-gateway:0.0.2` | 8090 |
+| Discovery Server | `course-registration/discovery-server:0.0.3` | 8761 |
+| API Gateway | `course-registration/api-gateway:0.0.3` | 8090 |
 
 ### Multi-Stage Docker Builds
 
-Both services have a Dockerfile and a `.dockerignore`. The builder uses Java 25 JDK and Maven Wrapper 3.3.4 with Maven 3.10.1 to package source code. The runtime stage copies the packaged JAR into a Java 25 JRE image. No prebuilt local `target/` directory is required. Tests are skipped during Docker packaging; run `mvnw.cmd clean verify` from each service directory separately before integration.
+Both services have a Dockerfile and a `.dockerignore`. The builder uses Java 25 JDK and Maven Wrapper 3.3.4 with Maven 3.10.1 to package source code. The runtime stage copies the packaged JAR into a Java 25 JRE image. No prebuilt local `target/` directory is required. Both runtime stages install curl using APT with `--no-install-recommends` and remove package lists. The curl package version is not pinned. Tests are skipped during Docker packaging; run `mvnw.cmd clean verify` from each service directory separately before integration.
 
 The base images are pinned by digest:
 
@@ -580,13 +579,25 @@ Start Docker Desktop in Linux container mode. From the repository root, ensure p
 
 ```cmd
 docker compose config
-docker compose up --build -d
+docker compose up --build -d --wait
 docker compose ps
 ```
 
-The Compose build uses the service source directories and creates a shared bridge network. The Gateway connects to Eureka using `http://discovery-server:8761/eureka/` inside Docker, not localhost. The current `depends_on` configuration controls startup order, not application readiness. Allow time for startup and registration.
+The Compose build uses the service source directories and creates a shared bridge network. The Gateway connects to Eureka using `http://discovery-server:8761/eureka/` inside Docker, not localhost. Both services use curl-based health checks against `/actuator/health`. The Gateway waits for Eureka to become healthy through `depends_on: condition: service_healthy`. Checks run every 10 seconds, with a 5-second timeout, 5 retries and a 40-second startup grace period. This controls initial startup, not ongoing dependency recovery or automatic restart on unhealthy status.
 
-### Verify the Infrastructure
+### Clean Build and Verify the Infrastructure
+
+To rebuild without the build cache and recreate the containers:
+
+```cmd
+docker compose build --no-cache
+docker compose up -d --force-recreate --wait
+docker compose ps
+docker inspect --format "{{.State.Health.Status}}" discovery-server
+docker inspect --format "{{.State.Health.Status}}" api-gateway
+```
+
+Both containers should report `healthy`.
 
 ```cmd
 curl -i http://localhost:8761/actuator/health
@@ -601,6 +612,9 @@ Open the [Eureka Dashboard](http://localhost:8761) and verify that API-GATEWAY i
 | Test (26 November 2026) | Verified result |
 |---|---|
 | Compose configuration and image build | Passed |
+| Clean build (both images, 0.0.3) | Passed, 143.6 seconds |
+| Compose health checks | Both healthy |
+| Health-dependent startup | Passed |
 | Both containers and shared network | Running |
 | Eureka health | HTTP 200, UP |
 | Gateway health | HTTP 200, UP |
@@ -612,7 +626,7 @@ Open the [Eureka Dashboard](http://localhost:8761) and verify that API-GATEWAY i
 
 | Command | Purpose |
 |---|---|
-| `docker compose up --build -d` | Build and start services |
+| `docker compose up --build -d --wait` | Build and start services |
 | `docker compose up -d` | Start without explicitly requesting a rebuild |
 | `docker compose ps` | Display service status |
 | `docker compose logs --tail 30` | Display recent logs |
@@ -623,7 +637,7 @@ Open the [Eureka Dashboard](http://localhost:8761) and verify that API-GATEWAY i
 
 ### Remaining Deployment Work
 
-The planned complete environment includes Eureka, API Gateway, Auth Service, Course Service, Enrollment Service, Grade Service, PostgreSQL databases, and the React frontend if included in the final deployment configuration. Each backend service must provide a Dockerfile. The current Compose configuration is for development, publishes ports on all host interfaces, runs the Java processes as root inside containers, and does not yet define Compose health checks. Production hardening, readiness checks, database configuration, business-service integration, successful request forwarding, load balancing, and final system testing remain pending. The 503 result is not evidence of successful forwarding or load distribution.
+The planned complete environment includes Eureka, API Gateway, Auth Service, Course Service, Enrollment Service, Grade Service, PostgreSQL databases, and the React frontend if included in the final deployment configuration. Each backend service must provide a Dockerfile. The current Compose configuration is for development, publishes ports on all host interfaces, runs the Java processes as root inside containers, and defines Compose health checks for both infrastructure services. Production hardening, broader application readiness validation, database configuration, business-service integration, successful request forwarding, load balancing, and final system testing remain pending. The 503 result is not evidence of successful forwarding or load distribution.
 
 ## 18. Git Workflow and Team Responsibilities
 
@@ -735,9 +749,9 @@ The Eureka Discovery Server and API Gateway have been initialized, built, and ve
 
 Gateway registration, health checks, and initial unavailable-service routing behavior have been tested.
 
-The initial Docker Compose environment, pinned multi-stage images, shared Docker network, Eureka registration, and both health endpoints have been verified. Documentation and Git publication of this milestone are in progress.
+The initial Docker Compose environment, pinned multi-stage images, shared Docker network, Eureka registration, and both health endpoints have been verified. The initial milestone was published to development in commit `925337c`. Version 0.0.3 adds curl-based Compose health checks and health-dependent startup. Clean builds, both healthy containers, Eureka registration and the expected unavailable-course response were verified on 26 November 2026. Publication of the 0.0.3 changes is pending.
 
-Successful business-service routing, load balancing, security implementation, Compose health checks, complete application deployment, and full system integration remain pending verification.
+Successful business-service routing, load balancing, security implementation, complete application deployment, and full system integration remain pending verification.
 
 For the latest status of every task and team member, refer to:
 
@@ -747,12 +761,12 @@ This README should be updated when project architecture, setup instructions, dep
 
 ---
 
-****Project:**** University Course Registration System
+**Project:** University Course Registration System
 
-****Course:**** Software Engineering II
+**Course:** Software Engineering II
 
-****Architecture:**** Microservices
+**Architecture:** Microservices
 
-****Repository:**** https://github.com/KiraIIV-max/course-registration-system
+**Repository:** https://github.com/KiraIIV-max/course-registration-system
 
-****Documentation Status:**** Active Development
+**Documentation Status:** Active Development

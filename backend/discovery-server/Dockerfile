@@ -17,6 +17,11 @@ RUN ./mvnw clean package -DskipTests -B
 # Stage 2: Runtime
 FROM eclipse-temurin:25-jre@sha256:4ed132f6832e9804b123e89a849a7b4502756ae64a4ee08ebab939d9d5d0a9fa
 
+# Install curl for container health checks
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 COPY --from=builder /app/target/discovery-server-0.0.1-SNAPSHOT.jar app.jar

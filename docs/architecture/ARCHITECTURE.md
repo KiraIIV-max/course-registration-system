@@ -1,10 +1,10 @@
 # System Architecture — University Course Registration System
 
-**Version:** Draft 1.2
+**Version:** Draft 1.3
 
 **Date:** November 26, 2026
 
-**Status:** Initial infrastructure verified locally and in Docker Compose — business architecture pending final approval.
+**Status:** Infrastructure verified locally and in Docker Compose with health checks and clean builds — business architecture pending final approval.
 
 ## 1. Architecture Overview
 
@@ -16,7 +16,7 @@ The architecture separates business responsibilities into independent services t
 
 The Eureka Discovery Server and API Gateway have been implemented and verified locally.
 
-Initial containerized deployment of Eureka and API Gateway has also been verified. Business microservices, security implementation, database integration, and complete application deployment remain pending.
+Containerized deployment of Eureka and API Gateway has been verified with image version 0.0.3, clean builds, and Compose health checks. Business microservices, security implementation, database integration, and complete application deployment remain pending.
 
 ## 2. Logical Architecture
 
@@ -425,18 +425,18 @@ The final report must identify where each approved constraint is enforced.
 
 ### 13.1 Current Deployment
 
-The root `compose.yaml` manages the initial infrastructure. Both services have been built and tested together.
+The root `compose.yaml` manages the initial infrastructure. Both services have been built without the build cache and tested together; both containers reported healthy.
 
 | Service | Image | Published port | Status |
 |---|---|---:|---|
-| discovery-server | course-registration/discovery-server:0.0.2 | 8761 | Verified |
-| api-gateway | course-registration/api-gateway:0.0.2 | 8090 | Verified |
+| discovery-server | course-registration/discovery-server:0.0.3 | 8761 | Verified |
+| api-gateway | course-registration/api-gateway:0.0.3 | 8090 | Verified |
 
 The Compose project is `course-registration-system`. Both services use the shared bridge network `course-registration-network` (generated name: `course-registration-system_course-registration-network`).
 
 ### 13.2 Build Architecture
 
-Both Dockerfiles use a multi-stage build: a Java 25 JDK builder packages the source using Maven Wrapper 3.3.4 and Maven 3.10.1; a Java 25 JRE runtime receives the packaged JAR. The runtime uses Temurin 25.0.5.1+2. Local build output is excluded by `.dockerignore`. Tests are skipped during Docker packaging and must be run separately.
+Both Dockerfiles use a multi-stage build: a Java 25 JDK builder packages the source using Maven Wrapper 3.3.4 and Maven 3.10.1; a Java 25 JRE runtime receives the packaged JAR. The runtime uses Temurin 25.0.5.1+2. Local build output is excluded by `.dockerignore`. Tests are skipped during Docker packaging and must be run separately. Both runtime stages install curl using apt-get with --no-install-recommends and remove package lists afterward. The curl package version is not pinned; pinned base images do not guarantee identical package versions on future builds.
 
 Pinned base images:
 
@@ -447,7 +447,19 @@ Pinned base images:
 
 The Gateway uses `http://discovery-server:8761/eureka/` inside Docker. Host-based development uses `http://localhost:8761/eureka/`. Container IP addresses must not be hardcoded.
 
-Compose starts Eureka before the Gateway using `depends_on`. This controls startup order, not readiness. Compose-level health checks are not yet configured. Both application health endpoints have been verified manually. The current configuration publishes both infrastructure ports on all host interfaces and uses `restart: unless-stopped`. It is a development configuration, not a production-hardened deployment.
+Compose starts Eureka first and waits for its health check to pass before starting the Gateway, using `depends_on` with `condition: service_healthy`. Both containers use curl against their own Actuator health endpoints.
+
+| Health check setting | Value |
+|---|---|
+| Discovery Server endpoint | http://localhost:8761/actuator/health |
+| API Gateway endpoint | http://localhost:8090/actuator/health |
+| Command | `curl -fsS` against the endpoint |
+| Interval | 10 seconds |
+| Timeout | 5 seconds |
+| Retries | 5 |
+| Start period | 40 seconds |
+
+These checks verify HTTP health responses, not successful business-service routing or load distribution. The startup dependency does not continuously enforce downstream readiness, and an unhealthy status alone does not trigger an automatic restart. The current configuration publishes both infrastructure ports on all host interfaces and uses `restart: unless-stopped`. It is a development configuration, not a production-hardened deployment.
 
 ### 13.4 Planned Complete Deployment
 
@@ -598,9 +610,12 @@ This does not confirm successful forwarding or load balancing.
 From the repository root, with local applications stopped:
 
 ```cmd
-docker compose config
-docker compose up --build -d
+docker compose config --quiet
+docker compose build --no-cache
+docker compose up -d --force-recreate --wait
 docker compose ps
+docker inspect --format "{{.State.Health.Status}}" discovery-server
+docker inspect --format "{{.State.Health.Status}}" api-gateway
 curl -i http://localhost:8761/actuator/health
 curl -i http://localhost:8090/actuator/health
 curl -i -H "Accept: application/json" http://localhost:8761/eureka/apps/API-GATEWAY
@@ -610,7 +625,11 @@ curl -i http://localhost:8090/api/courses
 
 | Test (November 26, 2026) | Result |
 |---|---|
-| Compose configuration and image builds | Passed (cached build layers reused) |
+| Compose configuration | Passed |
+| Clean Docker build (both images) | Passed, 143.6 seconds |
+| Compose startup with --wait | Passed |
+| Discovery Server container health | Healthy |
+| API Gateway container health | Healthy |
 | Shared network and container startup | Passed |
 | Eureka health | HTTP 200, UP |
 | Gateway health | HTTP 200, UP |
@@ -640,15 +659,15 @@ These responsibilities are coordination proposals and must be reviewed by the te
 
 ## 18. Next Infrastructure Milestone
 
-Initial containerization and two-service integration testing are complete. Documentation and Git publication are in progress.
+Initial containerization was published in commit `925337c` on development. The subsequent 0.0.3 health-check and clean-build milestone has passed local infrastructure tests; documentation and Git publication of these latest changes are in progress.
 
 Remaining work:
 
-1. Publish the verified infrastructure milestone on development.
+1. Publish the verified health-check and clean-build milestone on development.
 2. Review and approve shared API, security, and version conventions.
 3. Prepare and review the team-created Architecture Diagram.
 4. Integrate business services and PostgreSQL as they become available.
-5. Configure Compose health checks and readiness coordination.
+5. Extend Compose health checks and readiness coordination to the remaining services; verify a clean build on another team member’s machine.
 6. Verify successful Gateway routing, inter-service communication, security, and actual load balancing.
 7. Verify the complete Docker Compose environment and system behavior.
 8. Finalize architecture documentation and testing evidence.
